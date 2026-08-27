@@ -461,6 +461,8 @@ Beads provides a lightweight, dependency-aware issue database and CLI (`br` - be
 
 **Important:** `br` is non-invasive—it NEVER runs git commands automatically. You must manually commit changes after `br sync --flush-only`.
 
+**Which direction is dangerous depends on which side is newer — check before every export.** Flushing is required to persist a mutation, but an export overwrites `.beads/issues.jsonl` from the database, so it destroys work whenever the file is the newer copy (a `git pull` that changed it, or a JSONL-only write). Measured on br 0.2.22, 2026-08-26: with the JSONL genuinely newer, a bare read imported nothing — not a changed field, not even a whole issue present only in the file — and yet `br sync --status` flipped from "JSONL is newer (import recommended)" to "Database is newer (export recommended)", leaving the recommendation pointing at the destructive direction. So treat `br sync --status` as orientation only, and prove an export is additive first: every id in the JSONL present in the database, and the records you did not intend to change coming out byte-identical against a copy of the file taken beforehand. `--force` is never safe in either direction.
+
 ### Conventions
 
 - **Single source of truth:** Beads for task status/priority/dependencies; Agent Mail for conversation and audit
